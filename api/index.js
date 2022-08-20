@@ -6,7 +6,7 @@ import nodemailer from 'nodemailer'
 
 dotenv.config()
 //--------------------------
-const {MAIL_FROM, MAIL_HOST, MAIL_PASSWORD, MAIL_USERNAME, MAIL_PORT} = process.env
+const {MAIL_FROM, GMAIL_PASSWORD} = process.env
 const app = express()
 
 //----------------------------
@@ -15,24 +15,29 @@ app.use(express.json())
 app.use(bodyParser.urlencoded({extended: false}))
 
 //---------------------------
+let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: MAIL_FROM,
+        pass: GMAIL_PASSWORD
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+})
+
+transporter.verify().then(() => console.log('Ready to send mails'))
+
+//-------------------------------------------------------------
 app.get('/', (req, res) => res.send(process.env.WORK))
 
 app.post('/register', async(req, res) => {
 
     const {username, email, password} = req.body
 
-    const testAccount = await nodemailer.createTestAccount()
-    let transporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        auth: {
-            user: testAccount.user,
-            pass: testAccount.pass
-        },
-        tls: {
-            rejectUnauthorized: false
-        }
-    })
+
     // send mail with defined transport object
 
     await transporter.sendMail({
